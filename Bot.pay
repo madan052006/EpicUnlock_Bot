@@ -1,0 +1,32 @@
+import telebot
+
+# --- Bot Configuration ---
+BOT_TOKEN = "8321665611:AAEnAn3W1X-BUihwoqmJZHD7GqbkwqjirlQ"  # ⚠️ apna new token use karo, isko reset kar lena
+ADMIN_ID = 7094965848  # Tumhara Telegram ID
+CHANNEL_LINK = "https://t.me/epicunlock"  # Tumhara channel link
+
+# --- Bot Initialization ---
+bot = telebot.TeleBot(BOT_TOKEN)
+
+# --- Start Command ---
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message,
+        "🚀 Welcome to EpicUnlock!\n\n"
+        "👉 Pehle hamare channel join karo: " + CHANNEL_LINK + "\n\n"
+        "✅ Phir yaha par apne channel subscription ka screenshot bhejo.\n\n"
+        "📩 Jaise hi tumhara screenshot verify hoga, redeem code mil jayega!"
+    )
+
+# --- Screenshot Handler ---
+@bot.message_handler(content_types=['photo'])
+def handle_screenshot(message):
+    bot.forward_message(ADMIN_ID, message.chat.id, message.message_id)
+    bot.reply_to(message, 
+        "📤 Screenshot bhej diya gaya hai!\n\n"
+        "⏳ Admin verification ke baad tumhe redeem code milega (10-15 min)."
+    )
+
+# --- Bot Start ---
+print("🤖 Bot chal raha hai...")
+bot.infinity_polling()
