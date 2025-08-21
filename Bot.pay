@@ -1,32 +1,59 @@
-import telebot
+from pyrogram import Client, filters
+from pyrogram.errors import UserNotParticipant
 
-# --- Bot Configuration ---
-BOT_TOKEN = "8321665611:AAEnAn3W1X-BUihwoqmJZHD7GqbkwqjirlQ"  # ⚠️ apna new token use karo, isko reset kar lena
-ADMIN_ID = 7094965848  # Tumhara Telegram ID
-CHANNEL_LINK = "https://t.me/epicunlock"  # Tumhara channel link
+# -------------------- BOT CREDENTIALS (HARDCODED) --------------------
+API_ID = 20535473
+API_HASH = "65392813be912410dc63c982733a6746"
+BOT_TOKEN = "8321665611:AAEnAn3W1X-BUihwoqmJZHD7GqbkwqjirlQ"
+ADMIN_ID = 7094965848  # Apna Telegram ID yahan daalo
+CHANNEL_USERNAME = "EpicUnlock"  # Channel username without t.me/
+CHANNEL_URL = "https://t.me/EpicUnlock"
+BOT_NAME = "EpicRewards_Bot"
 
-# --- Bot Initialization ---
-bot = telebot.TeleBot(BOT_TOKEN)
+# -------------------- BOT CLIENT --------------------
+app = Client(
+    BOT_NAME,
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN
+)
 
-# --- Start Command ---
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message,
-        "🚀 Welcome to EpicUnlock!\n\n"
-        "👉 Pehle hamare channel join karo: " + CHANNEL_LINK + "\n\n"
-        "✅ Phir yaha par apne channel subscription ka screenshot bhejo.\n\n"
-        "📩 Jaise hi tumhara screenshot verify hoga, redeem code mil jayega!"
-    )
+# -------------------- START COMMAND --------------------
+@app.on_message(filters.command("start"))
+async def start(client, message):
+    user_id = message.from_user.id
+    try:
+        # Check if user joined the channel
+        member = await client.get_chat_member(CHANNEL_USERNAME, user_id)
+        if member.status in ["member", "creator", "administrator"]:
+            await message.reply_text(
+                "🚀 Welcome to EpicRewards Bot!\n\n"
+                "✅ Screenshot bhejo apne channel subscription ka.\n"
+                "⏳ Admin verification ke baad redeem code milega!"
+            )
+        else:
+            await message.reply_text(
+                f"❌ Please join our channel first: {CHANNEL_URL}"
+            )
+    except UserNotParticipant:
+        await message.reply_text(
+            f"❌ Please join our channel first: {CHANNEL_URL}"
+        )
+    except Exception as e:
+        await message.reply_text(f"⚠️ Error: {e}")
 
-# --- Screenshot Handler ---
-@bot.message_handler(content_types=['photo'])
-def handle_screenshot(message):
-    bot.forward_message(ADMIN_ID, message.chat.id, message.message_id)
-    bot.reply_to(message, 
-        "📤 Screenshot bhej diya gaya hai!\n\n"
-        "⏳ Admin verification ke baad tumhe redeem code milega (10-15 min)."
-    )
+# -------------------- SCREENSHOT HANDLER --------------------
+@app.on_message(filters.photo)
+async def handle_screenshot(client, message):
+    try:
+        await message.forward(ADMIN_ID)
+        await message.reply_text(
+            "📤 Screenshot bhej diya gaya hai!\n"
+            "⏳ Admin verification ke baad tumhe redeem code milega (10-15 min)."
+        )
+    except Exception as e:
+        await message.reply_text(f"⚠️ Error forwarding screenshot: {e}")
 
-# --- Bot Start ---
+# -------------------- RUN BOT --------------------
 print("🤖 Bot chal raha hai...")
-bot.infinity_polling()
+app.run()
